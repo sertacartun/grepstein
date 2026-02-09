@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+# If no arguments are passed
+if [[ $# -lt 1 ]]; then
+    echo -e "\e[31mUsage: $0 <query>\e[0m"
+    exit 1
+fi
 QUERY=$1
 PAGE=1
 DEPS=(pdftotext jq httpie)
@@ -21,7 +26,7 @@ dependency_check () {
 	done
 
 	if [[ "$dep_status" -ne "${#DEPS[@]}" ]]; then
-		echo -e "$RED\nThere are missing packages. Please install them to use epstein.sh $DEF"
+		echo -e "$RED\nThere are missing packages. Please install them to use grepstein.sh $DEF"
 		exit 1
 	fi
 }
@@ -45,34 +50,49 @@ fetch_results () {
 }
 
 ask_usrcmd () {
-	if [[ "$PDF_COUNT" -gt 0 ]]; then
-		echo -e "$GRN \nPlease select your action $DEF"
-		echo "-> Type OPEN to open a file"
-		echo "-> Type NEXT to continue to next page"
-		echo "-> Type EXIT to exit"
-		echo -n "Your command : "
-		read USRCMD
+    if [[ "$PDF_COUNT" -gt 0 ]]; then
+        echo -e "$GRN \nPlease select your action $DEF"
+        echo "-> Type OPEN to open a file"
+        echo "-> Type NEXT to continue to next page"
+        echo "-> Type EXIT to exit"
+        echo -n "Your command : "
+        read USRCMD
 
-		if [[ "$USRCMD" == "OPEN" || "$USRCMD" == "open" ]]; then
-			echo -ne "$GRN \nPlease write the index number of the file that you want to open : $DEF" 
-			read INDEX
-			http "${PDF_URLS[INDEX]}" "${HEADERS[@]}" > /tmp/epstein_file.pdf
-			pdftotext -layout /tmp/epstein_file.pdf - | less
-			rm /tmp/epstein_file.pdf
-			fetch_results
-			ask_usrcmd
-		elif [[ "$USRCMD" == "NEXT" || "$USRCMD" == "next" ]]; then
-			echo -e "$YEL \nProceding to next page... $DEF"
-			let "PAGE+=1"
-			fetch_results
-			ask_usrcmd
-		elif [[ "$USRCMD" == "EXIT" || "$USRCMD" == "exit" ]]; then
-			exit 1
-		else
-			echo -e "$RED \nInvalid command, please enter a valid command."
-			ask_usrcmd	
-		fi
-	fi
+        USRCMD=${USRCMD,,}
+
+        case "$USRCMD" in
+            open)
+                echo -ne "$GRN \nPlease write the index number of the file that you want to open : $DEF"
+                read INDEX
+
+		if ! [[ "$INDEX" =~ ^[0-9]+$ ]] || (( INDEX < 0 || INDEX >= PDF_COUNT )); then
+        		echo -e "$RED \nInvalid index. Please choose a number between 0 and $((PDF_COUNT-1)). $DEF"
+        		ask_usrcmd
+        		return
+    		fi
+
+                http "${PDF_URLS[$INDEX]}" "${HEADERS[@]}" > /tmp/epstein_file.pdf
+                pdftotext -layout /tmp/epstein_file.pdf - | less
+                rm /tmp/epstein_file.pdf
+                fetch_results
+                ask_usrcmd
+                ;;
+            next)
+                echo -e "$YEL \nProceding to next page... $DEF"
+                let "PAGE+=1"
+                fetch_results
+                ask_usrcmd
+                ;;
+            exit)
+                echo -e "$YEL \nExiting... $DEF"
+                exit 1
+                ;;
+            *)
+                echo -e "$RED \nInvalid command, please enter a valid command. $DEF"
+                ask_usrcmd
+                ;;
+        esac
+    fi
 }
 
 dependency_check

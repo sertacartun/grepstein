@@ -29,7 +29,7 @@ dependency_check () {
 	done
 
 	if [[ "$dep_status" -ne "${#DEPS[@]}" ]]; then
-		echo -e "$RED\nThere are missing packages. Please install them to use epstein.sh $DEF"
+		echo -e "$RED\nThere are missing packages. Please install them to use grepstein.sh $DEF"
 		exit 1
 	fi
 }
@@ -66,10 +66,14 @@ ask_usrcmd () {
 				"open"|"OPEN")
 					echo -ne "$GRN \nPlease write the index number of the file that you want to open : $DEF"
 					read INDEX
-					http "${PDF_URLS[INDEX]}" "${HEADERS[@]}" > /tmp/epstein_file.pdf
-					pdftotext -layout /tmp/epstein_file.pdf - | less
-					rm /tmp/epstein_file.pdf
-					fetch_results
+					if [[ $INDEX -ge 0 && $INDEX -le 9 ]]; then
+						http "${PDF_URLS[INDEX]}" "${HEADERS[@]}" > /tmp/epstein_file.pdf
+						pdftotext -layout /tmp/epstein_file.pdf - | less
+						rm /tmp/epstein_file.pdf
+						fetch_results
+					else
+						echo -e "$RED \nPlease Provide a valid index number"
+					fi
 					;;
 				"next"|"NEXT")
 					echo -e "$YEL \nProceding to next page... $DEF"

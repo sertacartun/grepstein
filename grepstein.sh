@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-if [[ $1 == "--fzf" ]]
-then
+if [[ $1 == "--fzf" ]]; then
 	shift
 	FZF=true
 else
@@ -21,8 +20,7 @@ YEL=$'\e[33m'
 GRN=$'\e[32m'
 DEF=$'\e[0m'
 
-cleanup()
-{
+cleanup() {
 	for file in "$TMP_PDF" "$TMP_TXT"
 	do
 		[[ -f "$file" ]] && rm -f "$file"
@@ -122,14 +120,13 @@ fi
 
 # fzf option
 
-command -v fzf &> /dev/null \
-|| { printf "fzf is not installed\n"; exit 1; }
+command -v fzf &>/dev/null \
+|| { printf "fzf is not installed\n" 2>&1; exit 1; }
 
 TMP_TXT="/tmp/epstein_file.txt"
 export QUERY TMP_PDF TMP_TXT RED DEF
 
-get_file()
-{
+get_file() {
 	local URL="$1"
 	local -a HEADERS
 
@@ -143,14 +140,12 @@ get_file()
 	sed -i "s/${QUERY}/${RED}&${DEF}/gI" "$TMP_TXT"
 }
 
-preview()
-{
+preview() {
 	get_file "$1"
 	cat "$TMP_TXT"
 }
 
-get_all_urls()
-{
+get_all_urls() {
 	local page
 
 	while true

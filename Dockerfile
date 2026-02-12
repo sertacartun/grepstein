@@ -1,17 +1,18 @@
-FROM debian:stable-slim
+FROM debian:bookworm-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
     bash \
-    curl \
     jq \
+    httpie \
     poppler-utils \
     less \
     fzf \
-    httpie \
     ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+ && rm -rf /var/lib/apt/lists/* \
+ && rm -rf /usr/share/doc/* /usr/share/man/*
 
 WORKDIR /app
 
